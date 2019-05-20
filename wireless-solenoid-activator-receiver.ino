@@ -14,13 +14,14 @@ int OUTPUT_PIN = 13;
 int poof_state = 0;
 int poof_hodl = 0;
 int duration = 0;
+int now;
 
 void lightThatShitUp();
 
 Task taskLightThatShitUp( TASK_SECOND * 0.1 , TASK_FOREVER, &lightThatShitUp );
 
 void lightThatShitUp() {
-  int now = millis();
+  now = millis();
   if (poof_state) {
     poof_state = 0;
     if (poof_hodl == 0) {
@@ -44,14 +45,18 @@ void receivedCallback( uint32_t from, String &msg ) {
     return;
   }
   String cmd = msgJSON["msg"];
-  duration = msgJSON["delay"];
 
   if (cmd == "Poof!") {
+    duration = msgJSON["delay"];
     poof_state = 1;
   } else
 
   if (cmd == "Ping!") {
+    pong["nodeId"] = msgJSON["nodeId"];
+    serializeJson(pong, pongStr);
     mesh.sendBroadcast(pongStr);
+    Serial.printf("startHere: Sent %s\n", pongStr.c_str());
+    pongStr = "";
   }
 }
 
@@ -81,7 +86,6 @@ void setup() {
   userScheduler.addTask( taskLightThatShitUp );
   taskLightThatShitUp.enable();
   pong["msg"] = "Pong!";
-  serializeJson(pong, pongStr);
 }
 
 void loop() {
