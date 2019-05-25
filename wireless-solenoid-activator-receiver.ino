@@ -13,27 +13,6 @@ int poof_hodl = 0;
 int duration = 0;
 int now;
 
-void lightThatShitUp();
-
-Task taskLightThatShitUp( TASK_SECOND * 0.1 , TASK_FOREVER, &lightThatShitUp );
-
-void lightThatShitUp() {
-  now = millis();
-  if (poof_state) {
-    poof_state = 0;
-    if (poof_hodl == 0) {
-      Serial.println("Poof!");
-      digitalWrite(OUTPUT_PIN, HIGH);
-      poof_hodl = now + duration;
-    }
-  }
-  if (poof_hodl > 0 && now >= poof_hodl) {
-    Serial.println("fooP!");
-    digitalWrite(OUTPUT_PIN, LOW);
-    poof_hodl = 0;
-  }
-}
-
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg ) {
   Serial.printf("Received from %u msg=%s\n", from, msg.c_str());
@@ -80,12 +59,24 @@ void setup() {
   mesh.onNewConnection(&newConnectionCallback);
   mesh.onChangedConnections(&changedConnectionCallback);
   mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
-  userScheduler.addTask( taskLightThatShitUp );
-  taskLightThatShitUp.enable();
   pong["msg"] = "Pong!";
 }
 
 void loop() {
   userScheduler.execute();
   mesh.update();
+  now = millis();
+  if (poof_state) {
+    poof_state = 0;
+    if (poof_hodl == 0) {
+      Serial.println("Poof!");
+      digitalWrite(OUTPUT_PIN, HIGH);
+      poof_hodl = now + duration;
+    }
+  }
+  if (poof_hodl > 0 && now >= poof_hodl) {
+    Serial.println("fooP!");
+    digitalWrite(OUTPUT_PIN, LOW);
+    poof_hodl = 0;
+  }
 }
